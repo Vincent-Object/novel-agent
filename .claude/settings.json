@@ -1,0 +1,18 @@
+{
+  "permissionMode": "ask",
+  "allowedTools": [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Bash",
+    "WebSearch",
+    "WebFetch"
+  ],
+  "hooks": {
+    "beforeToolCall": null,
+    "afterToolCall": null
+  },
+  "settingSources": ["project"]
+}

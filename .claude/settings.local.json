@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:platform.claude.com)",
+      "Bash(tree:*)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(npm view:*)",
+      "Bash(if [ -f .env ])",
+      "Bash(then echo \".env exists\")",
+      "Bash(else echo \".env does not exist\")",
+      "Bash(fi)",
+      "mcp__github__search_repositories",
+      "Bash(git remote add:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
