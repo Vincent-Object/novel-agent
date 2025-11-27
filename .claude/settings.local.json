@@ -14,7 +14,13 @@
       "mcp__github__search_repositories",
       "Bash(git remote add:*)",
       "Bash(git checkout:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "mcp__github__create_pull_request",
+      "Bash(git fetch:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []
