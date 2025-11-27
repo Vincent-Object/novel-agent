@@ -1,33 +1,33 @@
-import Anthropic from '@anthropic-ai/sdk';
 import readline from 'readline';
+import { ModelProvider, Message, ProviderFactory, ProviderType } from './providers/index.js';
 
 interface AgentConfig {
+  provider: ProviderType;
   apiKey: string;
   model?: string;
   maxTokens?: number;
-}
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
+  temperature?: number;
+  baseURL?: string;
 }
 
 /**
- * NovelAgent - 基于Claude Agent SDK的小说创作助手
+ * NovelAgent - 支持多模型的小说创作助手
  */
 export class NovelAgent {
-  private client: Anthropic;
-  private model: string;
-  private maxTokens: number;
+  private provider: ModelProvider;
   private conversationHistory: Message[] = [];
   private systemPrompt: string;
 
   constructor(config: AgentConfig) {
-    this.client = new Anthropic({
+    // 使用工厂创建对应的模型提供商
+    this.provider = ProviderFactory.createProvider(config.provider, {
       apiKey: config.apiKey,
+      model: config.model,
+      maxTokens: config.maxTokens,
+      temperature: config.temperature,
+      baseURL: config.baseURL,
     });
-    this.model = config.model || 'claude-sonnet-4-5-20250929';
-    this.maxTokens = config.maxTokens || 4096;
+
     this.systemPrompt = this.buildSystemPrompt();
   }
 
@@ -73,27 +73,19 @@ export class NovelAgent {
     });
 
     try {
-      // 调用Claude API
-      const response = await this.client.messages.create({
-        model: this.model,
-        max_tokens: this.maxTokens,
-        system: this.systemPrompt,
-        messages: this.conversationHistory,
-      });
-
-      // 提取助手响应
-      const assistantMessage = response.content
-        .filter((block) => block.type === 'text')
-        .map((block) => ('text' in block ? block.text : ''))
-        .join('\n');
+      // 调用模型提供商的API
+      const response = await this.provider.chat(
+        this.conversationHistory,
+        this.systemPrompt
+      );
 
       // 添加助手响应到历史
       this.conversationHistory.push({
         role: 'assistant',
-        content: assistantMessage,
+        content: response.content,
       });
 
-      return assistantMessage;
+      return response.content;
     } catch (error) {
       console.error('API调用失败:', error);
       throw error;
@@ -115,6 +107,14 @@ export class NovelAgent {
   }
 
   /**
+   * 获取当前模型配置信息
+   */
+  getModelInfo(): string {
+    const config = this.provider.getConfig();
+    return `当前使用: ${config.provider} - ${config.model}`;
+  }
+
+  /**
    * 启动交互式会话
    */
   async startInteractiveSession(): Promise<void> {
@@ -124,7 +124,7 @@ export class NovelAgent {
       prompt: '\n你> ',
     });
 
-    console.log('💬 开始对话（输入 /quit 退出，/clear 清空历史）\n');
+    console.log('💬 开始对话（输入 /quit 退出，/clear 清空历史，/info 查看模型信息）\n');
     rl.prompt();
 
     rl.on('line', async (line) => {
@@ -151,6 +151,12 @@ export class NovelAgent {
           console.log(`\n[${idx + 1}] ${msg.role}:`);
           console.log(msg.content);
         });
+        rl.prompt();
+        return;
+      }
+
+      if (input === '/info') {
+        console.log(`\n📊 ${this.getModelInfo()}`);
         rl.prompt();
         return;
       }
